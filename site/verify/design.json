@@ -1,0 +1,14 @@
+{
+  "args": ["https://moonvy.com/example", "--limit", "3"],
+  "expect": {
+    "rowCount": { "min": 1, "max": 1 },
+    "columns": ["title", "frames", "frameCount"],
+    "types": {
+      "title": "string",
+      "frames": "array",
+      "frameCount": "number"
+    },
+    "notEmpty": ["title"],
+    "mustBeTruthy": ["frameCount"]
+  }
+}

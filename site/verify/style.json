@@ -1,0 +1,23 @@
+{
+  "args": ["https://moonvy.com/example", "--node", "node_1"],
+  "expect": {
+    "rowCount": { "min": 1, "max": 1 },
+    "columns": ["id", "name", "bboxX", "bboxY", "bboxW", "bboxH", "background", "color", "fontSize", "fontWeight", "borderRadius", "opacity", "fontFamily"],
+    "types": {
+      "id": "string",
+      "name": "string",
+      "bboxX": "number",
+      "bboxY": "number",
+      "bboxW": "number",
+      "bboxH": "number",
+      "background": "string|null",
+      "color": "string|null",
+      "fontSize": "number|null",
+      "fontWeight": "number|string|null",
+      "borderRadius": "number|null",
+      "opacity": "number|null",
+      "fontFamily": "string|null"
+    },
+    "notEmpty": ["id"]
+  }
+}

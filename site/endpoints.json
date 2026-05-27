@@ -1,0 +1,32 @@
+{
+  "apiBase": "https://global-api.moonvy.com/v2",
+  "endpoints": {
+    "getNode": {
+      "path": "/anynode/get",
+      "method": "POST",
+      "params": {
+        "projectId": "string (required)",
+        "id": "string (required)",
+        "lv": "string (base|lite|mini|full)"
+      },
+      "auth": "JWT Bearer token from app.api.$options.token"
+    },
+    "listNodes": {
+      "path": "/anynode/list",
+      "method": "POST",
+      "params": {
+        "projectId": "string (required)",
+        "pageIndex": "number (required)"
+      },
+      "auth": "JWT Bearer token"
+    }
+  },
+  "fileServer": {
+    "genomeUrlField": "files.genome.url",
+    "compression": "gzip"
+  },
+  "urlFormat": {
+    "pattern": "/project/:projectId/:dirId/:fileId",
+    "example": "https://moonvy.com/project/<projectId>/<dirId>/<fileId>"
+  }
+}

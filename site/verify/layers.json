@@ -1,0 +1,17 @@
+{
+  "args": ["https://moonvy.com/example", "--limit", "5"],
+  "expect": {
+    "rowCount": { "min": 1, "max": 5 },
+    "columns": ["id", "name", "type", "x", "y", "width", "height"],
+    "types": {
+      "id": "string",
+      "name": "string",
+      "type": "string",
+      "x": "number",
+      "y": "number",
+      "width": "number",
+      "height": "number"
+    },
+    "notEmpty": ["id"]
+  }
+}

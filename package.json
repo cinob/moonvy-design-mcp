@@ -1,0 +1,13 @@
+{
+  "name": "moonvy-design-mcp",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Moonvy design extraction tools for Claude Code",
+  "scripts": {
+    "link": "bash sync-adapters.sh link",
+    "unlink": "bash sync-adapters.sh unlink"
+  },
+  "dependencies": {
+    "@jackwener/opencli": "^1.8.0"
+  }
+}
