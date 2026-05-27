@@ -185,25 +185,7 @@ export function extractNodeStyle(genome, nodeId) {
   }
   if (!raw) return [];
 
-  // Extract fills
-  let background = null;
-  if (raw.fills && raw.fills.length > 0) {
-    background = resolveFillColor(raw.fills[0]);
-  } else if (raw.fillLink) {
-    const style = (genome.styles?.fillStyles || []).find((s) => s.id === raw.fillLink);
-    if (style?.data?.[0]) background = resolveFillColor(style.data[0]);
-  }
-
-  // Extract text style
-  let color = null, fontSize = null, fontWeight = null, fontFamily = null;
-  if (raw.textbox?.segments?.length > 0) {
-    const seg = raw.textbox.segments[0];
-    fontSize = seg.fontSize || null;
-    fontWeight = seg.fontWeight || null;
-    fontFamily = seg.fontName?.family || null;
-    if (seg.fills?.[0]) color = resolveFillColor(seg.fills[0]);
-  }
-
+  const style = extractRawNodeStyle(genome, raw);
   return [{
     id: String(raw.id || ''),
     name: String(raw.name || ''),
@@ -211,14 +193,74 @@ export function extractNodeStyle(genome, nodeId) {
     bboxY: Math.round(raw.rect?.y || 0),
     bboxW: Math.round(raw.rect?.w || 0),
     bboxH: Math.round(raw.rect?.h || 0),
-    background,
+    background: style.background,
+    color: style.color,
+    fontSize: style.fontSize,
+    fontWeight: style.fontWeight,
+    borderRadius: style.borderRadius,
+    opacity: style.opacity,
+    fontFamily: style.fontFamily,
+  }];
+}
+
+export function extractRawNodeStyle(genome, raw) {
+  let fillColor = null;
+  if (raw.fills && raw.fills.length > 0) {
+    fillColor = resolveFillColor(raw.fills[0]);
+  } else if (raw.fillLink) {
+    const linked = (genome.styles?.fillStyles || []).find((s) => s.id === raw.fillLink);
+    if (linked?.data?.[0]) fillColor = resolveFillColor(linked.data[0]);
+  }
+
+  let color = null, fontSize = null, fontWeight = null, fontFamily = null, lineHeight = null, letterSpacing = null;
+  if (raw.textbox?.segments?.length > 0) {
+    const seg = raw.textbox.segments[0];
+    fontSize = seg.fontSize || null;
+    fontWeight = seg.fontWeight || null;
+    fontFamily = seg.fontName?.family || null;
+    lineHeight = seg.lineHeight?.value || null;
+    letterSpacing = seg.letterSpacing?.value ?? null;
+    color = seg.fills?.[0] ? resolveFillColor(seg.fills[0]) : fillColor;
+  }
+
+  return {
+    background: raw.type === 'text' ? null : fillColor,
     color,
     fontSize,
     fontWeight,
     borderRadius: raw.borderRadius || null,
     opacity: raw.blend?.opacity != null ? raw.blend.opacity : null,
     fontFamily,
-  }];
+    lineHeight,
+    letterSpacing,
+  };
+}
+
+export function extractTree(genome, frameFilter, options = {}) {
+  const withStyle = Boolean(options.withStyle);
+  const maxDepth = Number.isInteger(options.maxDepth) ? options.maxDepth : 99;
+
+  function toNode(raw, depth = 0) {
+    const node = {
+      id: String(raw.id || ''),
+      name: String(raw.name || ''),
+      type: String(raw.type || ''),
+      x: Math.round(raw.rect?.x || 0),
+      y: Math.round(raw.rect?.y || 0),
+      width: Math.round(raw.rect?.w || 0),
+      height: Math.round(raw.rect?.h || 0),
+    };
+    if (raw.textbox?.text) node.text = raw.textbox.text;
+    if (withStyle) node.style = extractRawNodeStyle(genome, raw);
+    if ((raw.children || []).length > 0 && depth < maxDepth) {
+      node.children = raw.children.map((child) => toNode(child, depth + 1));
+    }
+    return node;
+  }
+
+  return (genome.pages || [])
+    .filter((page) => !frameFilter || page.id === frameFilter)
+    .map((page) => toNode(page, 0));
 }
 
 /**

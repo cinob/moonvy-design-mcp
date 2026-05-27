@@ -5,7 +5,8 @@
   "description": "Moonvy design extraction tools for Claude Code",
   "scripts": {
     "link": "bash sync-adapters.sh link",
-    "unlink": "bash sync-adapters.sh unlink"
+    "unlink": "bash sync-adapters.sh unlink",
+    "status": "bash sync-adapters.sh status"
   },
   "dependencies": {
     "@jackwener/opencli": "^1.8.0"
