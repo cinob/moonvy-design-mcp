@@ -24,9 +24,11 @@ opencli moonvy tokens <url> -f json
 ## 安装
 
 ```bash
-npm install
-npm run link    # 创建符号链接到 ~/.opencli/clis/moonvy/
+npm install     # postinstall 会自动创建符号链接到 ~/.opencli/clis/moonvy/
+npm run status  # 查看链接状态
 ```
+
+也可以使用 `pnpm install` 或 `bun install`，安装后同样会执行 `postinstall`。
 
 需要已登录 Moonvy 的浏览器会话（复用本地登录状态）。
 

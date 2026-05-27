@@ -4,6 +4,7 @@
   "type": "module",
   "description": "Moonvy design extraction tools for Claude Code",
   "scripts": {
+    "postinstall": "bash sync-adapters.sh link",
     "link": "bash sync-adapters.sh link",
     "unlink": "bash sync-adapters.sh unlink",
     "status": "bash sync-adapters.sh status"
