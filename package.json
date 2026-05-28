@@ -7,9 +7,14 @@
     "postinstall": "bash sync-adapters.sh link",
     "link": "bash sync-adapters.sh link",
     "unlink": "bash sync-adapters.sh unlink",
-    "status": "bash sync-adapters.sh status"
+    "status": "bash sync-adapters.sh status",
+    "mcp": "node server.js",
+    "start": "node server.js",
+    "check": "node --check server.js"
   },
   "dependencies": {
-    "@jackwener/opencli": "^1.8.0"
+    "@jackwener/opencli": "^1.8.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^4.4.3"
   }
 }

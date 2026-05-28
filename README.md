@@ -51,6 +51,7 @@ Moonvy API: POST /v2/anynode/get (获取 genome 文件 URL)
 ```
 moonvy-design-mcp/
 ├── package.json
+├── server.js                 # MCP stdio server，薄封装 opencli moonvy 命令
 ├── sync-adapters.sh          # link/unlink 符号链接
 ├── adapters/moonvy/          # 适配器源码
 │   ├── shared.js             # API 客户端、genome 解析
@@ -77,7 +78,33 @@ moonvy-design-mcp/
 npm run link
 npm run unlink
 npm run status
+npm run check                # 检查 MCP server 语法
+npm run mcp                  # 以 stdio 方式启动 MCP server
 ```
+
+## 在 Claude Code 中安装 MCP
+
+当前 MCP server 是 OpenCLI 的薄封装，内部仍然调用 `opencli moonvy ... -f json`。
+
+```bash
+claude mcp add -s project moonvy -- node ./server.js
+```
+
+查看或移除：
+
+```bash
+claude mcp list
+claude mcp get moonvy
+claude mcp remove moonvy
+```
+
+暴露的 MCP 工具：
+
+- `moonvy_get_design`
+- `moonvy_list_layers`
+- `moonvy_get_node_style`
+- `moonvy_get_tree`
+- `moonvy_extract_tokens`
 
 ## Node ID 格式
 
