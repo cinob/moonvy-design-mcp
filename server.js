@@ -194,6 +194,24 @@ server.registerTool('moonvy_list_layers', {
   return jsonResponse(result);
 });
 
+server.registerTool('moonvy_list_pages', {
+  title: 'List Moonvy project pages',
+  description: 'Return pages/files available in a Moonvy project URL.',
+  inputSchema: {
+    url: z.string().min(1).describe('Moonvy project URL'),
+    limit: z.number().int().min(1).max(2000).default(500).describe('Maximum pages/files to return'),
+    maxPages: z.number().int().min(1).max(200).default(50).describe('Maximum API pages to scan'),
+  },
+}, async ({ url, limit, maxPages }) => {
+  const args = [
+    url,
+    '--limit', String(limit ?? 500),
+    '--max-pages', String(maxPages ?? 50),
+  ];
+  const result = await runOpenCli('pages', args);
+  return jsonResponse(result);
+});
+
 server.registerTool('moonvy_get_node_style', {
   title: 'Get Moonvy node style',
   description: 'Return normalized style data for a specific Moonvy node ID.',

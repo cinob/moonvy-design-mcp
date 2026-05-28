@@ -30,6 +30,7 @@ API-based Moonvy adapter implementation complete:
 Figma-style IDs: `4:1221`, `I4:1222;4:1005;4:69`
 
 ### Verified Commands
+- `opencli moonvy pages <url> --limit N -f json` - returns project pages/files
 - `opencli moonvy design <url> -f json` - returns title, frames, frameCount
 - `opencli moonvy layers <url> --limit N -f json` - returns layer tree
 - `opencli moonvy style <url> --node <id> -f json` - returns normalized style

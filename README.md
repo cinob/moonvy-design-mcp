@@ -8,6 +8,9 @@
 # 设计稿元数据（标题、画框尺寸）
 opencli moonvy design <url> -f json
 
+# 项目页面/文件列表
+opencli moonvy pages <url> -f json
+
 # 图层列表（ID、名称、类型、位置）
 opencli moonvy layers <url> --limit 20 -f json
 
@@ -56,6 +59,7 @@ moonvy-design-mcp/
 ├── adapters/moonvy/          # 适配器源码
 │   ├── shared.js             # API 客户端、genome 解析
 │   ├── design.js
+│   ├── pages.js
 │   ├── layers.js
 │   ├── style.js
 │   ├── tree.js
@@ -101,6 +105,7 @@ claude mcp remove moonvy
 暴露的 MCP 工具：
 
 - `moonvy_get_design`
+- `moonvy_list_pages`
 - `moonvy_list_layers`
 - `moonvy_get_node_style`
 - `moonvy_get_tree`

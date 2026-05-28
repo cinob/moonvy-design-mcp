@@ -80,6 +80,10 @@ export async function fetchNodeFull(projectId, nodeId, token) {
   return moonvyApi('/anynode/get', { projectId, id: nodeId, lv: 'full' }, token);
 }
 
+export async function fetchNodeListPage(projectId, pageIndex, token) {
+  return moonvyApi('/anynode/list', { projectId, pageIndex }, token);
+}
+
 /**
  * Fetch a node and its genome data.
  */
