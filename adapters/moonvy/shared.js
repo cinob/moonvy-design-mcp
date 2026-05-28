@@ -80,8 +80,10 @@ export async function fetchNodeFull(projectId, nodeId, token) {
   return moonvyApi('/anynode/get', { projectId, id: nodeId, lv: 'full' }, token);
 }
 
-export async function fetchNodeListPage(projectId, pageIndex, token) {
-  return moonvyApi('/anynode/list', { projectId, pageIndex }, token);
+export async function fetchNodeListPage(projectId, pageIndex, token, options = {}) {
+  const body = { projectId, pageIndex };
+  if (options.id) body.id = options.id;
+  return moonvyApi('/anynode/list', body, token);
 }
 
 /**

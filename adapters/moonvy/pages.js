@@ -81,11 +81,22 @@ function normalizeItem(item, projectId, inputDirId) {
 
 function numberFromResponse(response, paths) {
   const value = pickPath(response, paths);
+  if (value === null || value === undefined || value === '') return null;
   const numberValue = Number(value);
   return Number.isFinite(numberValue) ? numberValue : null;
 }
 
 function isLastPage(response, pageIndex, collectedCount) {
+  const hasNext = pickPath(response, [
+    'hasNext',
+    'data.hasNext',
+    'result.hasNext',
+    'pagination.hasNext',
+    'data.pagination.hasNext',
+    'result.pagination.hasNext',
+  ]);
+  if (hasNext === false) return true;
+
   const hasMore = pickPath(response, [
     'hasMore',
     'data.hasMore',
@@ -118,7 +129,26 @@ function isLastPage(response, pageIndex, collectedCount) {
     'data.pagination.totalPages',
     'data.pagination.pageCount',
   ]);
-  return totalPages !== null && pageIndex >= totalPages;
+  if (totalPages !== null && pageIndex + 1 >= totalPages) return true;
+
+  const pageSize = numberFromResponse(response, [
+    'limit',
+    'pageSize',
+    'data.limit',
+    'data.pageSize',
+    'result.limit',
+    'result.pageSize',
+  ]);
+  const length = numberFromResponse(response, [
+    'length',
+    'data.length',
+    'result.length',
+  ]);
+  return pageSize !== null && length !== null && length < pageSize;
+}
+
+function canHaveChildren(row) {
+  return ['any', 'dir', 'directory', 'folder'].includes(String(row?.type || '').toLowerCase());
 }
 
 cli({
@@ -160,23 +190,33 @@ cli({
 
     const rows = [];
     const seen = new Set();
+    const queue = [ids.fileId ? ids.dirId : ids.dirId || null];
+    const seenScopes = new Set(queue.map((scopeId) => scopeId || 'project'));
+    let scannedPages = 0;
 
-    for (let pageIndex = 1; pageIndex <= maxPages && rows.length < limit; pageIndex++) {
-      const response = await fetchNodeListPage(ids.projectId, pageIndex, token);
-      const items = extractItems(response);
-      if (items.length === 0) break;
+    while (queue.length > 0 && rows.length < limit && scannedPages < maxPages) {
+      const scopeId = queue.shift();
+      for (let pageIndex = 0; rows.length < limit && scannedPages < maxPages; pageIndex++) {
+        scannedPages++;
+        const response = await fetchNodeListPage(ids.projectId, pageIndex, token, scopeId ? { id: scopeId } : {});
+        const items = extractItems(response);
+        if (items.length === 0) break;
 
-      let added = 0;
-      for (const item of items) {
-        const row = normalizeItem(item, ids.projectId, ids.dirId);
-        if (!row || seen.has(row.id)) continue;
-        seen.add(row.id);
-        rows.push(row);
-        added++;
-        if (rows.length >= limit) break;
+        for (const item of items) {
+          const row = normalizeItem(item, ids.projectId, scopeId || ids.dirId);
+          if (!row) continue;
+          if (canHaveChildren(row) && !seenScopes.has(row.id)) {
+            seenScopes.add(row.id);
+            queue.push(row.id);
+          }
+          if (seen.has(row.id)) continue;
+          seen.add(row.id);
+          rows.push(row);
+          if (rows.length >= limit) break;
+        }
+
+        if (isLastPage(response, pageIndex, rows.length)) break;
       }
-
-      if (added === 0 || isLastPage(response, pageIndex, rows.length)) break;
     }
 
     if (rows.length === 0) throw new EmptyResultError('moonvy/pages', 'No pages/files found in project.');
