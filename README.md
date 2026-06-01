@@ -26,6 +26,15 @@ opencli moonvy tokens <url> -f json
 
 ## 安装
 
+下载本项目：
+
+```bash
+npx degit cinob/moonvy-design-mcp moonvy-design-mcp
+cd moonvy-design-mcp
+```
+
+安装依赖并链接 Moonvy OpenCLI 适配器：
+
 ```bash
 npm install     # postinstall 会自动创建符号链接到 ~/.opencli/clis/moonvy/
 npm run status  # 查看链接状态
