@@ -2,3 +2,4 @@
 CLAUDE.md
 node_modules
 .moonvy-mcp/
+site/verify/*.local.json

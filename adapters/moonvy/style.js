@@ -17,7 +17,7 @@ cli({
     { name: 'url', type: 'string', required: true, positional: true, help: 'Moonvy design URL' },
     { name: 'node', type: 'string', required: true, help: 'Node ID to extract style from' },
   ],
-  columns: ['id', 'name', 'bboxX', 'bboxY', 'bboxW', 'bboxH', 'background', 'color', 'fontSize', 'fontWeight', 'borderRadius', 'opacity', 'fontFamily'],
+  columns: ['id', 'name', 'bboxX', 'bboxY', 'bboxW', 'bboxH', 'background', 'color', 'fontSize', 'fontWeight', 'borderRadius', 'opacity'],
   func: async (page, args) => {
     const url = args.url;
     if (!url || !url.includes('moonvy')) throw new ArgumentError('url must be a valid Moonvy design URL');

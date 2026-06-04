@@ -205,7 +205,6 @@ export function extractNodeStyle(genome, nodeId) {
     fontWeight: style.fontWeight,
     borderRadius: style.borderRadius,
     opacity: style.opacity,
-    fontFamily: style.fontFamily,
   }];
 }
 

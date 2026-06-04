@@ -596,5 +596,26 @@ server.registerTool('moonvy_extract_tokens', {
   return jsonResponse(result);
 });
 
+server.registerTool('moonvy_download_asset', {
+  title: 'Download Moonvy asset',
+  description: 'Download slices, snapshots, or image fills from a Moonvy node.',
+  inputSchema: {
+    url: z.string().min(1).describe('Moonvy design or project URL'),
+    node: z.string().min(1).describe('Figma/Moonvy style node ID or file UUID'),
+    type: z.enum(['slice', 'snapshot', 'image']).optional().describe('Asset type: slice, snapshot, or image. Autodetected if omitted.'),
+    sliceFormat: z.string().optional().describe('Slice format/ratio (e.g. svg, base, max)'),
+    name: z.string().optional().describe('Custom name for the downloaded file'),
+    out: z.string().optional().describe('Output directory or absolute path to save the file. Defaults to current directory.'),
+  },
+}, async ({ url, node, type, sliceFormat, name, out }) => {
+  const args = [url, '--node', node];
+  optionalStringArg(args, '--type', type);
+  optionalStringArg(args, '--slice-format', sliceFormat);
+  optionalStringArg(args, '--name', name);
+  optionalStringArg(args, '--out', out);
+  const result = await runOpenCli('asset', args);
+  return jsonResponse(result);
+});
+
 const transport = new StdioServerTransport();
 await server.connect(transport);

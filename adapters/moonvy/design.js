@@ -16,7 +16,7 @@ cli({
   args: [
     { name: 'url', type: 'string', required: true, positional: true, help: 'Moonvy design URL' },
   ],
-  columns: ['title', 'frames', 'frameCount'],
+  columns: ['title', 'frameCount'],
   func: async (page, args) => {
     const url = args.url;
     if (!url || !url.includes('moonvy')) throw new ArgumentError('url must be a valid Moonvy design URL');
@@ -40,6 +40,6 @@ cli({
 
     // Extract design metadata from genome
     const meta = extractDesignMeta(genome, node);
-    return [{ title: meta.title, frames: meta.frames, frameCount: meta.frameCount }];
+    return [{ title: meta.title, frameCount: meta.frameCount }];
   },
 });

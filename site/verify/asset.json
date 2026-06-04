@@ -1,0 +1,15 @@
+{
+  "args": ["https://moonvy.com/project/<PROJECT_ID>/<DIR_ID>/<FILE_ID>", "--node", "<NODE_ID>", "--out", "/tmp/back-icon.svg"],
+  "expect": {
+    "rowCount": { "min": 1, "max": 1 },
+    "columns": ["success", "path", "size", "name", "url"],
+    "types": {
+      "success": "boolean",
+      "path": "string",
+      "size": "number",
+      "name": "string",
+      "url": "string"
+    },
+    "notEmpty": ["path", "name", "url"]
+  }
+}
