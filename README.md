@@ -22,6 +22,9 @@ opencli moonvy tree <url> --with-style -f json
 
 # 提取设计 Token（颜色、字号、圆角、间距）
 opencli moonvy tokens <url> -f json
+
+# 下载节点切图、快照或关联图片
+opencli moonvy asset <url> --node "4:1224" [--type slice|snapshot|image] [--slice-format format] [--name name] [--out dir]
 ```
 
 ## 安装
@@ -122,6 +125,7 @@ claude mcp remove moonvy
 - `moonvy_sync_project`
 - `moonvy_search_designs`
 - `moonvy_get_tree_by_name`
+- `moonvy_download_asset`
 
 ## Claude Code 推荐工作流
 
@@ -180,6 +184,30 @@ claude mcp add -s project moonvy -- node /path/to/moonvy-design-mcp/server.js
 ```
 
 如果设计图名称或链接也属于敏感信息，则不要提交整个 `.moonvy-mcp/`。
+
+## 切图与静态资源下载
+
+除了样式解析，工具还支持导出和下载设计稿中节点相关的切图（Slices）、画布快照（Snapshots）以及节点图片填充（Image Fills）：
+
+```bash
+# 下载指定图层的切图（默认导出 SVG 格式，可指定为 png/max 等高倍率格式）
+opencli moonvy asset <url> --node "120:4603" --slice-format max --out ./assets
+
+# 下载指定图层所处位置的快照图片
+opencli moonvy asset <url> --node "58:4363" --type snapshot --name "welcome_preview"
+
+# 下载节点的图片填充背景图
+opencli moonvy asset <url> --node "59:4441" --type image
+```
+
+支持的资源类型 (`--type`)：
+- `slice`: 图层配置的切图输出（通常为设计师手动标记导出的图标等）。
+- `snapshot`: 节点自身的画布预览（支持自动向上级画板回溯定位快照）。
+- `image`: 节点 `fills` 属性中填充的原始图片。
+
+`--slice-format` 支持指定切图尺寸与比例：例如 `svg`、`base` (1x)、`max` (最高倍率，通常为 4x/2x)。
+
+---
 
 ## Node ID 格式
 
