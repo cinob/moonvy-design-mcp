@@ -1,6 +1,6 @@
 import { cli, Strategy } from '@jackwener/opencli/registry';
 import { EmptyResultError, ArgumentError } from '@jackwener/opencli/errors';
-import { parseMoonvyUrl, getAuthToken, fetchNodeGenome, fetchNodeFull, findGenomeNode } from './shared.js';
+import { parseMoonvyUrl, getAuthToken, fetchNodeGenome, fetchNodeFull, findGenomeNode, findGenomeParent } from './shared.js';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 
@@ -70,33 +70,11 @@ cli({
 
       const { genome } = await fetchNodeGenome(ids.projectId, fileId, token);
 
-      // Find layer in genome
+      // Find layer in genome (findGenomeNode already handles partial matches)
       let layer = null;
       for (const p of genome.pages || []) {
         layer = findGenomeNode(p, nodeId);
         if (layer) break;
-      }
-      if (!layer) {
-        const parts = nodeId.split(';');
-        const cleanTarget = parts[parts.length - 1];
-        
-        // Sometimes Moonvy node IDs are completely different in different contexts.
-        // Let's just look through all pages to see if the hash is anywhere if we couldn't find the exact ID.
-        // Or if it's not found at all, we will return empty result.
-        for (const p of genome.pages || []) {
-          function walkPartial(n) {
-            if (n.id && (n.id.includes(nodeId) || n.id.includes(cleanTarget) || nodeId.includes(n.id) || cleanTarget.includes(n.id))) return n;
-            if (n.children) {
-              for (const c of n.children) {
-                const res = walkPartial(c);
-                if (res) return res;
-              }
-            }
-            return null;
-          }
-          layer = walkPartial(p);
-          if (layer) break;
-        }
       }
       if (!layer) {
         // As an absolute fallback for snapshot extraction when node isn't found exactly,
@@ -131,31 +109,8 @@ cli({
 
         // If not found, traverse up to find parent snapshot (e.g. artboard)
         if (!hash) {
-          let current = layer;
-          // Standard parent traversal
-          function findParentWithSnapshot(page, targetId) {
-            let foundParent = null;
-            const parts = targetId.split(';');
-            const cleanTarget = parts[parts.length - 1];
-            function walk(node, parent = null) {
-              if (!node) return false;
-              if (node.id === targetId || (node.id && node.id.includes(targetId)) || (node.id && cleanTarget && node.id.includes(cleanTarget))) {
-                foundParent = parent;
-                return true;
-              }
-              if (node.children) {
-                for (const child of node.children) {
-                  if (walk(child, node)) return true;
-                }
-              }
-              return false;
-            }
-            walk(page, null);
-            return foundParent;
-          }
-
           for (const page of genome.pages || []) {
-            let parent = findParentWithSnapshot(page, current.id);
+            let parent = findGenomeParent(page, layer.id);
             const seen = new Set();
             if (parent) seen.add(parent.id);
             while (parent) {
@@ -164,10 +119,10 @@ cli({
                 fallbackName = parent.name || fallbackName;
                 break;
               }
-              parent = findParentWithSnapshot(page, parent.id);
+              parent = findGenomeParent(page, parent.id);
               if (parent) {
-                 if (seen.has(parent.id)) break;
-                 seen.add(parent.id);
+                if (seen.has(parent.id)) break;
+                seen.add(parent.id);
               }
             }
             if (hash) break;

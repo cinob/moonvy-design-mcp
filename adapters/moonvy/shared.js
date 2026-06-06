@@ -118,17 +118,30 @@ export function collectGenomeNodes(node, depth = 0) {
  * Find a node by ID in the genome tree.
  */
 export function findGenomeNode(node, targetId) {
-  if (!node) return null;
-  // Try exact match, includes, or if targetId is an instance path
-  const parts = targetId.split(';');
-  const cleanTarget = parts[parts.length - 1];
-  
-  if (node.id === targetId || (node.id && node.id.includes(targetId)) || (node.id && cleanTarget && node.id.includes(cleanTarget))) return node;
+  if (!node || !targetId) return null;
+  const cleanTarget = targetId.split(';').pop();
+
+  if (node.id && (node.id === targetId || node.id.includes(targetId) || node.id.includes(cleanTarget) || targetId.includes(node.id))) return node;
   for (const child of node.children || []) {
     const found = findGenomeNode(child, targetId);
     if (found) return found;
   }
   return null;
+}
+
+/**
+ * Find a node's parent in the genome tree.
+ */
+export function findGenomeParent(node, targetId, parent = undefined) {
+  if (!node || !targetId) return undefined;
+  const cleanTarget = targetId.split(';').pop();
+
+  if (node.id && (node.id === targetId || node.id.includes(targetId) || node.id.includes(cleanTarget) || targetId.includes(node.id))) return parent ?? null;
+  for (const child of node.children || []) {
+    const found = findGenomeParent(child, targetId, node);
+    if (found !== undefined) return found;
+  }
+  return undefined;
 }
 
 /**
@@ -190,44 +203,15 @@ export function extractLayers(genome, frameFilter, limit = 50) {
 export function extractNodeStyle(genome, nodeId) {
   const pages = genome.pages || [];
   let raw = null;
-  
-  // Clean up ID
-  let targetId = nodeId;
-  // If the passed node ID has extra wrapper prefixes (like I4:83;4:66), we might just want to look for the last part
-  const parts = targetId.split(';');
-  const cleanTarget = parts[parts.length - 1];
-  
+
   for (const page of pages) {
-    raw = findGenomeNode(page, targetId) || findGenomeNode(page, cleanTarget);
+    raw = findGenomeNode(page, nodeId);
     if (raw) break;
   }
+
   if (!raw) {
-    for (const page of pages) {
-      function walkPartial(n) {
-        if (n.id && (n.id === targetId || n.id.includes(targetId) || n.id.includes(cleanTarget) || targetId.includes(n.id))) return n;
-        if (n.children) {
-          for (const c of n.children) {
-            const res = walkPartial(c);
-            if (res) return res;
-          }
-        }
-        return null;
-      }
-      raw = walkPartial(page);
-      if (raw) break;
-    }
+    raw = { id: nodeId, name: 'Unknown Node', type: 'unknown', rect: { x: 0, y: 0, w: 0, h: 0 } };
   }
-  
-  if (!raw) {
-    // If not found, create a fake fallback node so it doesn't fail completely
-    raw = {
-      id: nodeId,
-      name: 'Unknown Node',
-      type: 'unknown',
-      rect: { x: 0, y: 0, w: 0, h: 0 }
-    };
-  }
-  if (!raw) return [];
 
   const style = extractRawNodeStyle(genome, raw);
   return [{
