@@ -16,15 +16,15 @@ cli({
   args: [
     { name: 'url', type: 'string', required: true, positional: true, help: 'Moonvy design URL' },
     { name: 'frame', type: 'string', default: '', help: 'Filter layers by frame/page ID' },
-    { name: 'limit', type: 'int', default: 50, help: 'Max layers to return (1-500)' },
+    { name: 'limit', type: 'int', default: 5000, help: 'Max layers to return (1-5000)' },
   ],
   columns: ['id', 'name', 'type', 'x', 'y', 'width', 'height'],
   func: async (page, args) => {
     const url = args.url;
     if (!url || !url.includes('moonvy')) throw new ArgumentError('url must be a valid Moonvy design URL');
-    const limit = Number(args.limit ?? 50);
+    const limit = Number(args.limit ?? 5000);
     if (!Number.isInteger(limit) || limit <= 0) throw new ArgumentError('limit must be a positive integer');
-    if (limit > 500) throw new ArgumentError('limit must be <= 500');
+    if (limit > 5000) throw new ArgumentError('limit must be <= 5000');
     const frame = String(args.frame || '');
 
     // Navigate to page to establish login state

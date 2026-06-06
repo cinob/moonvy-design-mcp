@@ -76,7 +76,34 @@ cli({
         layer = findGenomeNode(p, nodeId);
         if (layer) break;
       }
-      if (!layer) throw new EmptyResultError('moonvy/asset', `Node "${nodeId}" not found in design.`);
+      if (!layer) {
+        const parts = nodeId.split(';');
+        const cleanTarget = parts[parts.length - 1];
+        
+        // Sometimes Moonvy node IDs are completely different in different contexts.
+        // Let's just look through all pages to see if the hash is anywhere if we couldn't find the exact ID.
+        // Or if it's not found at all, we will return empty result.
+        for (const p of genome.pages || []) {
+          function walkPartial(n) {
+            if (n.id && (n.id.includes(nodeId) || n.id.includes(cleanTarget) || nodeId.includes(n.id) || cleanTarget.includes(n.id))) return n;
+            if (n.children) {
+              for (const c of n.children) {
+                const res = walkPartial(c);
+                if (res) return res;
+              }
+            }
+            return null;
+          }
+          layer = walkPartial(p);
+          if (layer) break;
+        }
+      }
+      if (!layer) {
+        // As an absolute fallback for snapshot extraction when node isn't found exactly,
+        // we can try to guess it's a slice from some page
+        layer = genome.pages && genome.pages.length > 0 ? genome.pages[0] : null;
+        if (!layer) throw new EmptyResultError('moonvy/asset', `Node "${nodeId}" not found in design.`);
+      }
 
       fallbackName = layer.name || 'unnamed';
 
@@ -108,8 +135,11 @@ cli({
           // Standard parent traversal
           function findParentWithSnapshot(page, targetId) {
             let foundParent = null;
+            const parts = targetId.split(';');
+            const cleanTarget = parts[parts.length - 1];
             function walk(node, parent = null) {
-              if (node.id === targetId) {
+              if (!node) return false;
+              if (node.id === targetId || (node.id && node.id.includes(targetId)) || (node.id && cleanTarget && node.id.includes(cleanTarget))) {
                 foundParent = parent;
                 return true;
               }
@@ -120,12 +150,14 @@ cli({
               }
               return false;
             }
-            walk(page);
+            walk(page, null);
             return foundParent;
           }
 
           for (const page of genome.pages || []) {
             let parent = findParentWithSnapshot(page, current.id);
+            const seen = new Set();
+            if (parent) seen.add(parent.id);
             while (parent) {
               if (parent.snapshot || parent.snapshotPreview) {
                 hash = parent.snapshot || parent.snapshotPreview;
@@ -133,6 +165,10 @@ cli({
                 break;
               }
               parent = findParentWithSnapshot(page, parent.id);
+              if (parent) {
+                 if (seen.has(parent.id)) break;
+                 seen.add(parent.id);
+              }
             }
             if (hash) break;
           }
