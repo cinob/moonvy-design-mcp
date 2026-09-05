@@ -1,6 +1,6 @@
 import { cli, Strategy } from '@jackwener/opencli/registry';
 import { EmptyResultError, ArgumentError } from '@jackwener/opencli/errors';
-import { parseMoonvyUrl, getAuthToken, fetchNodeGenome, fetchNodeFull, findGenomeNode, findGenomeParent } from './shared.js';
+import { parseMoonvyUrl, getAuthToken, fetchNodeGenome, fetchNodeFull, findGenomeNode, findGenomeParent, sniffImageExtension } from './shared.js';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 
@@ -43,7 +43,11 @@ cli({
     let fallbackName = 'asset';
     let assetExtension = '';
 
-    const isLayer = nodeId.includes(':');
+    // Layer IDs are Figma-style "1:23" or Sketch-style UUIDs; only treat as a
+    // top-level file node when it matches the URL's file/dir id.
+    const fileIdInUrl = ids.fileId || ids.dirId;
+    const isLayer = nodeId.includes(':') ||
+      (!!fileIdInUrl && nodeId.toLowerCase() !== String(fileIdInUrl).toLowerCase());
 
     if (!isLayer) {
       // UUID / top-level project file node
@@ -163,6 +167,14 @@ cli({
         const match = downloadUrl.match(/\.(svg|png|jpg|jpeg|webp|gif|json)/i);
         assetExtension = match ? match[0] : '';
       }
+    }
+
+    // Moonvy's fs server may ignore the requested slice format and serve
+    // different bytes (e.g. ask svg, get png). The magic bytes win over any
+    // guess — only skip when the user pinned an explicit file path via --out.
+    const sniffed = sniffImageExtension(buffer);
+    if (sniffed && sniffed !== assetExtension && !finalFilename) {
+      assetExtension = sniffed;
     }
 
     // 3. Resolve save paths

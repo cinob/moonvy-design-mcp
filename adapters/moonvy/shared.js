@@ -53,6 +53,22 @@ export async function moonvyApi(path, body, token) {
 }
 
 /**
+ * Sniff the real image format from magic bytes. Moonvy's fs server often
+ * serves PNG bytes regardless of the requested slice format (e.g. svg),
+ * so extension must be derived from content, not from the request.
+ */
+export function sniffImageExtension(buffer) {
+  if (!buffer || buffer.length < 12) return '';
+  if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47) return '.png';
+  if (buffer[0] === 0xff && buffer[1] === 0xd8) return '.jpg';
+  const head = buffer.subarray(0, 256).toString('utf-8').trimStart();
+  if (head.startsWith('<svg') || head.startsWith('<?xml')) return '.svg';
+  if (head.startsWith('RIFF') && buffer.subarray(8, 12).toString('ascii') === 'WEBP') return '.webp';
+  if (head.startsWith('GIF8')) return '.gif';
+  return '';
+}
+
+/**
  * Fetch and decompress a genome JSON file from Moonvy's file server.
  */
 export async function fetchGenome(genomeUrl) {
@@ -214,6 +230,7 @@ export function extractNodeStyle(genome, nodeId) {
   }
 
   const style = extractRawNodeStyle(genome, raw);
+  const text = raw.textbox?.text;
   return [{
     id: String(raw.id || ''),
     name: String(raw.name || ''),
@@ -227,6 +244,7 @@ export function extractNodeStyle(genome, nodeId) {
     fontWeight: style.fontWeight,
     borderRadius: style.borderRadius,
     opacity: style.opacity,
+    text: typeof text === 'string' ? text : null,
   }];
 }
 
