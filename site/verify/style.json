@@ -1,8 +1,34 @@
 {
-  "args": ["https://moonvy.com/project/<PROJECT_ID>/<DIR_ID>/<FILE_ID>", "--node", "<NODE_ID>"],
+  "args": [
+    "https://moonvy.com/project/<PROJECT_ID>/<DIR_ID>/<FILE_ID>",
+    "--node",
+    "<NODE_ID>"
+  ],
   "expect": {
-    "rowCount": { "min": 1, "max": 1 },
-    "columns": ["id", "name", "bboxX", "bboxY", "bboxW", "bboxH", "background", "color", "fontSize", "fontWeight", "borderRadius", "opacity"],
+    "rowCount": {
+      "min": 1,
+      "max": 1
+    },
+    "columns": [
+      "id",
+      "name",
+      "type",
+      "bboxX",
+      "bboxY",
+      "bboxW",
+      "bboxH",
+      "text",
+      "background",
+      "border",
+      "borderRadius",
+      "opacity",
+      "visible",
+      "color",
+      "fontFamily",
+      "fontWeight",
+      "fontSize",
+      "lineHeight"
+    ],
     "types": {
       "id": "string",
       "name": "string",
@@ -13,10 +39,18 @@
       "background": "string|null",
       "color": "string|null",
       "fontSize": "number|null",
-      "fontWeight": "number|string|null",
+      "fontWeight": "number|null",
       "borderRadius": "number|null",
-      "opacity": "number|null"
+      "opacity": "number|null",
+      "type": "string",
+      "text": "string|null",
+      "border": "string|null",
+      "visible": "boolean",
+      "fontFamily": "string|null",
+      "lineHeight": "number|null"
     },
-    "notEmpty": ["id"]
+    "notEmpty": [
+      "id"
+    ]
   }
 }

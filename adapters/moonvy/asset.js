@@ -94,8 +94,8 @@ cli({
       if (!type) {
         if (layer.slices) type = 'slice';
         else if (layer.snapshot) type = 'snapshot';
-        else if (layer.fills?.some(f => f.type === 'image')) type = 'image';
-        else type = 'snapshot'; // default fallback
+        else if (layer.fills?.some(f => f.type === 'image' && (f.imageHash || f.id || f.hash))) type = 'image';
+        else type = 'snapshot'; // default fallback (also for Sketch image fills, whose bitmap is not in the genome)
       }
 
       if (type === 'slice') {
@@ -137,10 +137,15 @@ cli({
         downloadUrl = assets[hash] || genome.images?.[hash]?.url || `https://fs.moonvy.com/${hash}`;
         assetExtension = '.png';
       } else if (type === 'image') {
-        const imageFill = layer.fills?.find(f => f.type === 'image');
+        const imageFill = layer.fills?.find(f => f.type === 'image' || (f && f.type == null && !f.color && !f.gradient));
         if (!imageFill) throw new ArgumentError('Node does not have an image fill.');
         const hash = imageFill.imageHash || imageFill.id || imageFill.hash;
-        if (!hash) throw new ArgumentError('Image fill does not have a valid asset reference.');
+        if (!hash) {
+          throw new ArgumentError(
+            'This image fill has no bitmap in the genome (Sketch-imported designs only keep slices and snapshots). ' +
+            'Use --type snapshot to get the rendered area, or ask the designer to mark the layer as a slice (切图).',
+          );
+        }
 
         downloadUrl = assets[hash] || genome.images?.[hash]?.url || `https://fs.moonvy.com/${hash}`;
         assetExtension = genome.images?.[hash]?.type ? `.${genome.images[hash].type}` : '.png';

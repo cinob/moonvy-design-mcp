@@ -5,7 +5,7 @@ import { parseMoonvyUrl, getAuthToken, fetchNodeGenome, extractNodeStyle } from 
 cli({
   site: 'moonvy',
   name: 'style',
-  description: 'Return normalized style data for a specific node in a Moonvy design',
+  description: 'Return full normalized style (fills, gradient, border, radius, shadow, font family/weight/size/line-height, alignment, variables) for one node in a Moonvy design',
   access: 'read',
   example: 'opencli moonvy style <url> --node node_1 -f json',
   domain: 'moonvy.com',
@@ -17,7 +17,7 @@ cli({
     { name: 'url', type: 'string', required: true, positional: true, help: 'Moonvy design URL' },
     { name: 'node', type: 'string', required: true, help: 'Node ID to extract style from' },
   ],
-  columns: ['id', 'name', 'bboxX', 'bboxY', 'bboxW', 'bboxH', 'background', 'color', 'fontSize', 'fontWeight', 'borderRadius', 'opacity', 'text'],
+  columns: ['id', 'name', 'type', 'bboxX', 'bboxY', 'bboxW', 'bboxH', 'text', 'background', 'backgroundVariable', 'gradient', 'imageFill', 'border', 'borderWidth', 'borderColor', 'borderRadius', 'opacity', 'visible', 'boxShadow', 'blur', 'color', 'colorVariable', 'fontFamily', 'fontStyle', 'fontWeight', 'fontSize', 'lineHeight', 'letterSpacing', 'textAlign', 'textDecoration', 'segments', 'component', 'exportable'],
   func: async (page, args) => {
     const url = args.url;
     if (!url || !url.includes('moonvy')) throw new ArgumentError('url must be a valid Moonvy design URL');

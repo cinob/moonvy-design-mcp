@@ -5,7 +5,7 @@ import { parseMoonvyUrl, getAuthToken, fetchNodeGenome, extractTree } from './sh
 cli({
   site: 'moonvy',
   name: 'tree',
-  description: 'Return the full Moonvy layer tree, optionally including normalized style data',
+  description: 'Return the full Moonvy layer tree; --with-style adds normalized style per node (null/empty fields omitted)',
   access: 'read',
   example: 'opencli moonvy tree <url> --with-style -f json',
   domain: 'moonvy.com',
@@ -18,8 +18,9 @@ cli({
     { name: 'frame', type: 'string', default: '', help: 'Filter tree by frame/page ID' },
     { name: 'with-style', type: 'boolean', default: false, help: 'Include normalized style data for every node' },
     { name: 'max-depth', type: 'int', default: 99, help: 'Maximum child depth to include' },
+    { name: 'include-hidden', type: 'boolean', default: false, help: 'Keep layers whose visibility is off (hidden layers are skipped by default)' },
   ],
-  columns: ['id', 'name', 'type', 'x', 'y', 'width', 'height', 'text', 'style', 'children'],
+  columns: ['id', 'name', 'type', 'x', 'y', 'width', 'height', 'visible', 'text', 'style', 'children'],
   func: async (page, args) => {
     const url = args.url;
     if (!url || !url.includes('moonvy')) throw new ArgumentError('url must be a valid Moonvy design URL');
@@ -57,6 +58,7 @@ cli({
     const frame = args.frame === nodeId ? null : args.frame || null;
     const tree = extractTree(genome, frame, {
       withStyle: Boolean(args['with-style'] ?? args.withStyle),
+      includeHidden: Boolean(args['include-hidden'] ?? args.includeHidden),
       maxDepth,
     });
 

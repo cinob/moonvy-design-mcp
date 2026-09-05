@@ -18,7 +18,7 @@ cli({
     { name: 'frame', type: 'string', default: '', help: 'Filter layers by frame/page ID' },
     { name: 'limit', type: 'int', default: 5000, help: 'Max layers to return (1-5000)' },
   ],
-  columns: ['id', 'name', 'type', 'x', 'y', 'width', 'height'],
+  columns: ['id', 'name', 'type', 'x', 'y', 'width', 'height', 'text', 'visible'],
   func: async (page, args) => {
     const url = args.url;
     if (!url || !url.includes('moonvy')) throw new ArgumentError('url must be a valid Moonvy design URL');

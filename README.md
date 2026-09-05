@@ -25,7 +25,32 @@ opencli moonvy tokens <url> -f json
 
 # 下载节点切图、快照或关联图片
 opencli moonvy asset <url> --node "4:1224" [--type slice|snapshot|image] [--slice-format format] [--name name] [--out dir]
+
+# 调试：某个节点在 genome 里的原始 JSON（或 --out 落盘整份 genome）
+opencli moonvy raw <url> --node "4:1224" -f json
 ```
+
+## 样式字段（style / tree --with-style）
+
+归一化样式从 genome 1.9 的真实字段推导，覆盖：
+
+| 字段 | 来源 | 说明 |
+|---|---|---|
+| `background` / `backgroundVariable` | `fills[]` type=color（含 `varBind` 颜色变量） | 半透明用 `rgba()`，变量按名字报出（如 `工地签`） |
+| `gradient` | `fills[]` type=gradient | 含 stops / from / to / angle 与可直接用的 `css`；`background` 同时给出该 css |
+| `imageFill` / `imageUrl` | `fills[]` 无 type 的项 | Sketch 导入的图片填充不带位图，只能标记；要图请用 `asset --type snapshot` 或让设计师切图 |
+| `border` / `borderWidth` / `borderColor` / `borderAlign` / `strokes` | `strokes[]` | `border` 是 CSS 简写；`borderAlign` inside/center/outside |
+| `borderRadius` / `borderRadii` | `borderRadius` | 四角不一致时 `borderRadii` 给四个值 |
+| `opacity` / `visible` / `blendMode` / `clipsContent` | `blend` | 隐藏图层默认从 tree 中剔除（`--include-hidden` 保留） |
+| `boxShadow` / `blur` / `backdropBlur` / `effects` | `effects[]` | 阴影输出 CSS box-shadow |
+| `fontFamily` / `fontStyle` / `fontWeight` / `italic` | `textbox.segments[].fontName` | **genome 没有 fontWeight 字段**，数字字重由 `fontName.style`（Bold/Medium/…）与 `_macWeight` 推导 |
+| `fontSize` / `lineHeight` / `letterSpacing` / `textDecoration` | 同上 | |
+| `color` / `colorVariable` | segment `fills` | |
+| `textAlign` / `textAlignVertical` / `paragraphSpacing` | `textbox` | |
+| `mixedText` / `segments` | 多段富文本时给出每段样式 | |
+| `component` / `exportable` / `sliceFormats` / `hasSnapshot` / `isFrame` / `subType` | `masterName` / `slices` / `snapshot` | `exportable=true` 表示设计师标了切图，用 `asset` 下载 |
+
+`tree --with-style` 会省略 null / false / 空数组字段，`style` 单节点命令输出完整字段。
 
 ## 安装
 
@@ -126,6 +151,7 @@ claude mcp remove moonvy
 - `moonvy_search_designs`
 - `moonvy_get_tree_by_name`
 - `moonvy_download_asset`
+- `moonvy_get_raw_node`（调试用，返回节点原始 genome JSON）
 
 ## Claude Code 推荐工作流
 

@@ -525,8 +525,9 @@ server.registerTool('moonvy_get_tree_by_name', {
     frame: z.string().optional().describe('Optional frame/page ID filter'),
     withStyle: z.boolean().default(true).describe('Include normalized style data for every node'),
     maxDepth: z.number().int().min(0).default(99).describe('Maximum child depth to include'),
+    includeHidden: z.boolean().default(false).describe('Keep layers whose visibility is off (skipped by default)'),
   },
-}, async ({ name, workspaceDir, frame, withStyle, maxDepth }) => {
+}, async ({ name, workspaceDir, frame, withStyle, maxDepth, includeHidden }) => {
   const workspace = resolveWorkspaceDir(workspaceDir);
   const catalog = await readWorkspaceCatalog(workspace);
   const aliases = await readWorkspaceAliases(workspace);
@@ -546,6 +547,7 @@ server.registerTool('moonvy_get_tree_by_name', {
   const args = [design.url, '--max-depth', String(maxDepth ?? 99)];
   optionalStringArg(args, '--frame', frame);
   if (withStyle ?? true) args.push('--with-style');
+  if (includeHidden) args.push('--include-hidden');
   const tree = await runOpenCli('tree', args, { timeoutMs: 180_000 });
 
   return jsonResponse({
@@ -556,9 +558,21 @@ server.registerTool('moonvy_get_tree_by_name', {
   });
 });
 
+server.registerTool('moonvy_get_raw_node', {
+  title: 'Get raw Moonvy genome node',
+  description: 'Return the raw, un-normalized genome JSON for one node (fills, strokes, effects, textbox segments exactly as Moonvy stores them). Use when a normalized field looks wrong or missing.',
+  inputSchema: {
+    url: z.string().min(1).describe('Moonvy design URL'),
+    node: z.string().min(1).describe('Moonvy/Figma-style node ID'),
+  },
+}, async ({ url, node }) => {
+  const result = await runOpenCli('raw', [url, '--node', node]);
+  return jsonResponse(result);
+});
+
 server.registerTool('moonvy_get_node_style', {
   title: 'Get Moonvy node style',
-  description: 'Return normalized style data for a specific Moonvy node ID.',
+  description: 'Return full normalized style for one Moonvy node: background/gradient/image fill, border (width/color/align), radius, opacity, visibility, shadow/blur, and for text: color, font family/style/weight (numeric CSS weight derived from the font face), size, line-height, letter-spacing, alignment, decoration, per-segment styles when mixed. Color variables are reported by name.',
   inputSchema: {
     url: z.string().min(1).describe('Moonvy design URL'),
     node: z.string().min(1).describe('Moonvy/Figma-style node ID, e.g. 4:1224'),
@@ -574,20 +588,22 @@ server.registerTool('moonvy_get_tree', {
   inputSchema: {
     url: z.string().min(1).describe('Moonvy design URL'),
     frame: z.string().optional().describe('Optional frame/page ID filter'),
-    withStyle: z.boolean().default(false).describe('Include normalized style data for every node'),
+    withStyle: z.boolean().default(false).describe('Include normalized style data for every node (fills/gradient, border, radius, shadow, font family/weight/size/line-height, text alignment, color variables). Null/empty fields are omitted.'),
     maxDepth: z.number().int().min(0).default(99).describe('Maximum child depth to include'),
+    includeHidden: z.boolean().default(false).describe('Keep layers whose visibility is off (skipped by default)'),
   },
-}, async ({ url, frame, withStyle, maxDepth }) => {
+}, async ({ url, frame, withStyle, maxDepth, includeHidden }) => {
   const args = [url, '--max-depth', String(maxDepth ?? 99)];
   optionalStringArg(args, '--frame', frame);
   if (withStyle) args.push('--with-style');
+  if (includeHidden) args.push('--include-hidden');
   const result = await runOpenCli('tree', args, { timeoutMs: 180_000 });
   return jsonResponse(result);
 });
 
 server.registerTool('moonvy_extract_tokens', {
   title: 'Extract Moonvy design tokens',
-  description: 'Extract reusable design tokens from a Moonvy design URL.',
+  description: 'Extract reusable design tokens from a Moonvy design URL: colors, stroke colors, gradients, named color variables, font families/sizes/weights/line-heights, typography combinations, radii, border widths, shadows.',
   inputSchema: {
     url: z.string().min(1).describe('Moonvy design URL'),
   },
