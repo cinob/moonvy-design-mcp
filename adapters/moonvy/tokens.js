@@ -5,7 +5,7 @@ import { parseMoonvyUrl, getAuthToken, fetchNodeGenome, extractTokens } from './
 cli({
   site: 'moonvy',
   name: 'tokens',
-  description: 'Extract reusable design tokens (colors, fontSizes, radii, spacing) from a Moonvy design',
+  description: 'Extract reusable design tokens (colors, stroke colors, gradients, variables, fonts/weights/sizes/line-heights, typography combos, radii, border widths, shadows, spacing) from a Moonvy design',
   access: 'read',
   example: 'opencli moonvy tokens <url> -f json',
   domain: 'moonvy.com',
@@ -16,7 +16,7 @@ cli({
   args: [
     { name: 'url', type: 'string', required: true, positional: true, help: 'Moonvy design URL' },
   ],
-  columns: ['colors', 'fontSizes', 'radii', 'spacing'],
+  columns: ['colors', 'strokeColors', 'gradients', 'variables', 'fontFamilies', 'fontSizes', 'fontWeights', 'lineHeights', 'typography', 'radii', 'borderWidths', 'shadows', 'spacing'],
   func: async (page, args) => {
     const url = args.url;
     if (!url || !url.includes('moonvy')) throw new ArgumentError('url must be a valid Moonvy design URL');
@@ -48,11 +48,6 @@ cli({
       throw new EmptyResultError('moonvy/tokens', 'No design tokens found in design.');
     }
 
-    return [{
-      colors: tokens.colors || [],
-      fontSizes: tokens.fontSizes || [],
-      radii: tokens.radii || [],
-      spacing: tokens.spacing || [],
-    }];
+    return [tokens];
   },
 });

@@ -35,3 +35,17 @@ Figma-style IDs: `4:1221`, `I4:1222;4:1005;4:69`
 - `opencli moonvy layers <url> --limit N -f json` - returns layer tree
 - `opencli moonvy style <url> --node <id> -f json` - returns normalized style
 - `opencli moonvy tokens <url> -f json` - returns colors, fontSizes, radii, spacing
+
+## 2026-09-05
+
+对照 5 份真实 genome（Sketch 导入，genomeVer 1.9）逐字段核对，补齐适配器漏掉的样式：
+
+- 字重：genome **没有** `segment.fontWeight`，只有 `fontName.style`（Regular/Medium/Bold…）、`fontName._macWeight`（NSFont 0–15，5=Regular 9=Bold）、`postscriptName`。旧代码读不存在的字段导致永远 null。
+- 描边：`strokes[] {fills, w, align, join, cap, dash}` 之前完全未解析。
+- 渐变：`fills[].type='gradient'`，`gradient {type, stops[{color,position}], from, to}`，旧 resolveFillColor 直接返回 null。
+- 颜色变量：`fill.varBind.color.variableId` → `genome.variables.all[id].valuesByMode[collection.defaultModeId]`。
+- 颜色 alpha 在 `color.alpha`，与 `fill.opacity` 相乘；旧代码忽略 alpha。
+- 效果：`effects[] {type:'shadow'|'filterBlur', offsetX, offsetY, blur, spread, color}`。
+- 图片填充：Sketch 导入后 fills 项只有 `{opacity, visible}`，genome.images 只含切图和快照哈希，位图不可得。
+- 其它：`blend.visible`（隐藏）、`blend.isClip`、`textbox.align/alignVertical/spacing`、`textDecoration`、`masterName`、`slices`、`subType`、`isFrame`。
+- `styles`（fillStyles/textStyles）在这些 genome 中为空对象，fillLink 分支保留但未见使用。

@@ -5,7 +5,7 @@ import { parseMoonvyUrl, getAuthToken, fetchNodeGenome, extractTree } from './sh
 cli({
   site: 'moonvy',
   name: 'tree',
-  description: 'Return the full Moonvy layer tree, optionally including normalized style data',
+  description: 'Return the full Moonvy layer tree; --with-style adds normalized style per node (null/empty fields omitted)',
   access: 'read',
   example: 'opencli moonvy tree <url> --with-style -f json',
   domain: 'moonvy.com',
@@ -18,8 +18,9 @@ cli({
     { name: 'frame', type: 'string', default: '', help: 'Filter tree by frame/page ID' },
     { name: 'with-style', type: 'boolean', default: false, help: 'Include normalized style data for every node' },
     { name: 'max-depth', type: 'int', default: 99, help: 'Maximum child depth to include' },
+    { name: 'include-hidden', type: 'boolean', default: false, help: 'Keep layers whose visibility is off (hidden layers are skipped by default)' },
   ],
-  columns: ['id', 'name', 'type', 'x', 'y', 'width', 'height', 'text', 'style', 'children'],
+  columns: ['id', 'name', 'type', 'x', 'y', 'width', 'height', 'visible', 'text', 'style', 'children'],
   func: async (page, args) => {
     const url = args.url;
     if (!url || !url.includes('moonvy')) throw new ArgumentError('url must be a valid Moonvy design URL');
@@ -38,9 +39,26 @@ cli({
     const nodeId = ids.fileId || ids.dirId;
     if (!nodeId) throw new ArgumentError('No file or directory ID in URL');
 
-    const { genome } = await fetchNodeGenome(ids.projectId, nodeId, token);
-    const tree = extractTree(genome, args.frame || null, {
+    let genome;
+    try {
+      ({ genome } = await fetchNodeGenome(ids.projectId, nodeId, token));
+    } catch (err) {
+      if (/No genome file/i.test(err?.message || '')) {
+        // 项目级/目录级 URL（/project/:id 或 /project/:id/:dirId）没有 genome：
+        // genome 只存在于具体设计稿节点上，提示调用方换设计稿 URL
+        throw new ArgumentError(
+          `URL ${url} does not point at a specific design. ` +
+          'Use a design URL: /project/:projectId/:dirId/:designId ' +
+          '(get one from the moonvy pages tool), then retry tree/style/asset.',
+        );
+      }
+      throw err;
+    }
+    // genome 根页 id 与 URL 里的设计稿 id 不同；用设计稿 id 当 frame = 要整棵树
+    const frame = args.frame === nodeId ? null : args.frame || null;
+    const tree = extractTree(genome, frame, {
       withStyle: Boolean(args['with-style'] ?? args.withStyle),
+      includeHidden: Boolean(args['include-hidden'] ?? args.includeHidden),
       maxDepth,
     });
 
