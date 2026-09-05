@@ -38,8 +38,24 @@ cli({
     const nodeId = ids.fileId || ids.dirId;
     if (!nodeId) throw new ArgumentError('No file or directory ID in URL');
 
-    const { genome } = await fetchNodeGenome(ids.projectId, nodeId, token);
-    const tree = extractTree(genome, args.frame || null, {
+    let genome;
+    try {
+      ({ genome } = await fetchNodeGenome(ids.projectId, nodeId, token));
+    } catch (err) {
+      if (/No genome file/i.test(err?.message || '')) {
+        // 项目级/目录级 URL（/project/:id 或 /project/:id/:dirId）没有 genome：
+        // genome 只存在于具体设计稿节点上，提示调用方换设计稿 URL
+        throw new ArgumentError(
+          `URL ${url} does not point at a specific design. ` +
+          'Use a design URL: /project/:projectId/:dirId/:designId ' +
+          '(get one from the moonvy pages tool), then retry tree/style/asset.',
+        );
+      }
+      throw err;
+    }
+    // genome 根页 id 与 URL 里的设计稿 id 不同；用设计稿 id 当 frame = 要整棵树
+    const frame = args.frame === nodeId ? null : args.frame || null;
+    const tree = extractTree(genome, frame, {
       withStyle: Boolean(args['with-style'] ?? args.withStyle),
       maxDepth,
     });
